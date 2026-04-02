@@ -1,0 +1,1 @@
+[('admin@acme.com', 1, 0), ('sarah.manager@acme.com', 1, 0), ('john.manager@acme.com', 1, 0), ('alice@acme.com', 1, 0), ('bob@acme.com', 1, 0), ('charlie@acme.com', 1, 0), ('diana@acme.com', 1, 0), ('nishant8405006745@gmail.com', 1, 0)]
