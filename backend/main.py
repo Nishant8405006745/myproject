@@ -3,9 +3,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+import logging
 import models
-from database import engine
+from database import engine, SessionLocal
 from routers import auth_router, users_router, permissions_router, accounting_router, profile_router, notifications_router, messages_router
+
+_log = logging.getLogger("uvicorn.error")
 
 _BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 _static_env = os.environ.get("STATIC_DIR")
@@ -14,6 +17,40 @@ HAS_FRONTEND = os.path.isdir(STATIC_DIR) and os.path.isfile(os.path.join(STATIC_
 
 # Create all tables
 models.Base.metadata.create_all(bind=engine)
+
+
+def _auto_seed_admin_if_enabled() -> None:
+    """If AUTO_SEED_ADMIN=1|true|yes and no admin@acme.com exists, create demo admin (for first deploy on Render)."""
+    if os.getenv("AUTO_SEED_ADMIN", "").lower() not in ("1", "true", "yes"):
+        return
+    db = SessionLocal()
+    try:
+        if db.query(models.User).filter(models.User.email == "admin@acme.com").first():
+            return
+        from auth import get_password_hash
+
+        db.add(
+            models.User(
+                name="Super Admin",
+                email="admin@acme.com",
+                password_hash=get_password_hash("Admin@123"),
+                role="admin",
+                department="Administration",
+            )
+        )
+        db.commit()
+        _log.warning(
+            "AUTO_SEED_ADMIN: created admin@acme.com (password Admin@123). "
+            "Unset AUTO_SEED_ADMIN, change the password, and run seed.py for full demo data."
+        )
+    except Exception:
+        db.rollback()
+        _log.exception("AUTO_SEED_ADMIN failed")
+    finally:
+        db.close()
+
+
+_auto_seed_admin_if_enabled()
 
 app = FastAPI(
     title="HYGLOW Accounting API",

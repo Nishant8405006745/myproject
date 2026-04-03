@@ -100,6 +100,26 @@ export default function Login() {
           </p>
         </div>
 
+        {typeof window !== 'undefined' && window.location.hostname.includes('onrender.com') && (
+          <div
+            style={{
+              marginTop: 14,
+              padding: '10px 12px',
+              borderRadius: 8,
+              fontSize: '0.75rem',
+              lineHeight: 1.45,
+              color: 'var(--text-muted)',
+              background: 'rgba(59,130,246,0.08)',
+              border: '1px solid rgba(59,130,246,0.2)',
+            }}
+          >
+            <strong style={{ color: 'var(--text-primary)' }}>Hosted on Render?</strong> Use{' '}
+            <strong>admin@acme.com</strong> / <strong>Admin@123</strong> after the database is seeded.
+            Your service can set <code style={{ fontSize: '0.7rem' }}>AUTO_SEED_ADMIN=1</code> (see{' '}
+            <code style={{ fontSize: '0.7rem' }}>render.yaml</code>) or run <code style={{ fontSize: '0.7rem' }}>python seed.py</code> in the Render Shell.
+          </div>
+        )}
+
         <div style={{ marginTop: 24, textAlign: 'center', fontSize: '0.85rem' }}>
           <span style={{ color: 'var(--text-muted)' }}>Don't have an account? </span>
           <Link to="/signup" style={{ color: 'var(--accent-light)', textDecoration: 'none', fontWeight: 600 }}>Create one</Link>

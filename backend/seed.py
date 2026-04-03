@@ -9,6 +9,11 @@ from auth import get_password_hash
 models.Base.metadata.create_all(bind=engine)
 db = SessionLocal()
 
+if db.query(models.User).filter(models.User.email == "admin@acme.com").first():
+    db.close()
+    print("Database already seeded (admin@acme.com exists). Nothing to do.")
+    raise SystemExit(0)
+
 ALL_MODULES = ["invoices", "expenses", "payroll", "ledger", "reports", "journal"]
 
 

@@ -1,7 +1,10 @@
 import axios from 'axios';
 
-// Empty string = same origin (Docker/nginx or dev with Vite proxy). Override with VITE_API_BASE_URL for split hosting.
-const baseURL = import.meta.env.VITE_API_BASE_URL ?? '';
+// Always talk to /api on the same host as this page (no manual “connect frontend to backend”):
+// - npm run dev: Vite proxies /api → localhost:8000 (vite.config.js)
+// - Docker / Render (root Dockerfile): UI + API are one service, one URL
+// Only set VITE_API_BASE_URL if you intentionally split UI and API across different domains.
+const baseURL = (import.meta.env.VITE_API_BASE_URL ?? '').trim();
 
 const api = axios.create({
   baseURL,
