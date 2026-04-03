@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+// Empty string = same origin (Docker/nginx or dev with Vite proxy). Override with VITE_API_BASE_URL for split hosting.
+const baseURL = import.meta.env.VITE_API_BASE_URL ?? '';
+
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL,
   headers: { 'Content-Type': 'application/json' },
 });
 

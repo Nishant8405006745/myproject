@@ -308,7 +308,10 @@ def get_online_users(
     try:
         cutoff = (datetime.utcnow() - timedelta(minutes=2)).strftime("%Y-%m-%d %H:%M:%S")
         result = db.execute(
-            text("SELECT id FROM users WHERE last_seen >= :cutoff AND is_active = 1 AND is_blocked = 0"),
+            text(
+                "SELECT id FROM users WHERE last_seen >= :cutoff "
+                "AND is_active IS true AND is_blocked IS NOT true"
+            ),
             {"cutoff": cutoff}
         )
         ids = [row[0] for row in result.fetchall()]

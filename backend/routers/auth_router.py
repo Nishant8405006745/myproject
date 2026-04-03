@@ -38,7 +38,7 @@ def _build_user_response(user: models.User, modules: list, manager_name: str = N
 
 @router.post("/signup")
 def signup(data: SignupRequest, db: Session = Depends(get_db)):
-    """Public self-registration — creates an Employee account awaiting admin activation."""
+    """Public self-registration — creates an active Employee account (module access still via permissions)."""
     existing = db.query(models.User).filter(models.User.email == data.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered.")
@@ -52,7 +52,7 @@ def signup(data: SignupRequest, db: Session = Depends(get_db)):
         role          = "employee",
         department    = data.department or "General",
         phone         = data.phone,
-        is_active     = False,   # Must be activated by admin/manager
+        is_active     = True,
     )
     db.add(new_user)
     db.commit()
@@ -64,14 +64,14 @@ def signup(data: SignupRequest, db: Session = Depends(get_db)):
         n = models.Notification(
             user_id  = admin.id,
             title    = "New User Signup",
-            message  = f"{data.name} ({data.email}) just signed up and needs activation.",
+            message  = f"{data.name} ({data.email}) just signed up.",
             type     = "info",
             link     = "/admin/users"
         )
         db.add(n)
     db.commit()
 
-    return {"message": "Account created successfully! Please wait for admin activation before you can log in."}
+    return {"message": "Account created successfully! You can sign in now."}
 
 
 @router.post("/login", response_model=schemas.TokenResponse)
@@ -79,8 +79,11 @@ def login(data: schemas.LoginRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == data.email).first()
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    if not user.is_active:
-        raise HTTPException(status_code=403, detail="Account not yet activated. Contact your admin.")
+    if not user.is_active and user.role != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Account not yet activated. Contact your admin or manager to enable your account.",
+        )
     if user.is_blocked:
         raise HTTPException(status_code=403, detail="Your account has been blocked. Contact your manager.")
 

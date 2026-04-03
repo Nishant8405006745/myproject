@@ -1,0 +1,3 @@
+# Used if Render runs a native Python build from repo root (not recommended for this app).
+# Prefer Docker: runtime Docker, Dockerfile at repo root — see render.yaml
+-r backend/requirements.txt

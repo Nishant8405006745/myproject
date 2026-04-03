@@ -99,7 +99,7 @@ def toggle_block_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if user.id == current_user.id:
-        raise HTTPException(status_code=400, detail="Cannot block yourself")
+        raise HTTPException(status_code=400, detail="You cannot block your own account.")
     if current_user.role == "manager":
         if user.manager_id != current_user.id:
             raise HTTPException(status_code=403, detail="Not your employee")

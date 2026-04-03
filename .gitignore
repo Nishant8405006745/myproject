@@ -1,0 +1,16 @@
+.env
+backend/static/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# Local database (use Postgres on Render)
+*.db
+
+# Node
+node_modules/
+frontend/dist/

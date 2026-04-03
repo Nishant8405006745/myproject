@@ -1,0 +1,42 @@
+# HYGLOW — run: docker compose up --build -d
+# First-time DB: docker compose exec backend python seed.py
+#
+# Production: set SECRET_KEY and CORS_ORIGINS in a .env file next to this compose file.
+# Example .env:
+#   SECRET_KEY=use-openssl-rand-hex-32
+#   CORS_ORIGINS=https://your-domain.com,https://www.your-domain.com
+
+services:
+  backend:
+    build: ./backend
+    container_name: hyglow-backend
+    restart: unless-stopped
+    volumes:
+      - hyglow_sqlite:/data
+    environment:
+      DATABASE_URL: sqlite:////data/accounting.db
+      SECRET_KEY: ${SECRET_KEY:-change-this-secret-in-production}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ""
+    container_name: hyglow-frontend
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    depends_on:
+      - backend
+
+volumes:
+  hyglow_sqlite:

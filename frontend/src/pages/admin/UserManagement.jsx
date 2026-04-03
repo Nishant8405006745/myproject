@@ -3,8 +3,10 @@ import api from '../../api/axios';
 import { Plus, Trash2, Edit2, X, Search, Download, Ban } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { exportToExcel } from '../../utils/excel';
+import { useAuth } from '../../context/AuthContext';
 
 export default function UserManagement() {
+  const { user: me } = useAuth();
   const [users, setUsers]         = useState([]);
   const [loading, setLoading]     = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -104,9 +106,11 @@ export default function UserManagement() {
         </div>
         {loading ? <div className="loading-center"><div className="spinner"/></div> : (
           <table>
-            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Department</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Department</th><th>Status</th><th>Active</th><th>Actions</th></tr></thead>
             <tbody>
-              {filtered.map(user => (
+              {filtered.map(user => {
+                const isSelf = me?.id != null && user.id === me.id;
+                return (
                 <tr key={user.id}>
                   <td>
                     <div style={{display:'flex',alignItems:'center',gap:10}}>
@@ -128,20 +132,27 @@ export default function UserManagement() {
                   </td>
                   <td>
                     <label className="toggle">
-                      <input type="checkbox" checked={user.is_active} onChange={() => toggleActive(user)}/>
+                      <input type="checkbox" checked={user.is_active} onChange={() => toggleActive(user)} disabled={isSelf}/>
                       <span className="toggle-slider"/>
                     </label>
                   </td>
                   <td>
-                    <button className="btn btn-danger btn-icon btn-sm" onClick={() => deleteUser(user.id)} title="Delete user" style={{ marginRight: 6 }}>
-                      <Trash2 size={14}/>
-                    </button>
-                    <button className={`btn btn-icon btn-sm ${user.is_blocked ? 'btn-primary' : 'btn-danger'}`} onClick={() => toggleBlock(user)} title={user.is_blocked ? "Unblock user" : "Block user"}>
-                      <Ban size={14}/>
-                    </button>
+                    {!isSelf && (
+                      <>
+                        <button className="btn btn-danger btn-icon btn-sm" onClick={() => deleteUser(user.id)} title="Delete user" style={{ marginRight: 6 }}>
+                          <Trash2 size={14}/>
+                        </button>
+                        <button className={`btn btn-icon btn-sm ${user.is_blocked ? 'btn-primary' : 'btn-danger'}`} onClick={() => toggleBlock(user)} title={user.is_blocked ? "Unblock user" : "Block user"}>
+                          <Ban size={14}/>
+                        </button>
+                      </>
+                    )}
+                    {isSelf && (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }} title="You cannot block or delete your own account from here">—</span>
+                    )}
                   </td>
                 </tr>
-              ))}
+              );})}
             </tbody>
           </table>
         )}

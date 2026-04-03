@@ -29,7 +29,7 @@ export default function Signup() {
         department: form.department || 'General',
         phone:      form.phone,
       });
-      toast.success('Account created! Waiting for admin activation.');
+      toast.success('Account created! You can sign in now.');
       navigate('/login');
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Signup failed.');
@@ -96,7 +96,7 @@ export default function Signup() {
           </div>
 
           <div className="signup-notice" style={{ background:'rgba(59,130,246,0.08)', border:'1px solid rgba(59,130,246,0.2)', borderRadius:10, padding:'12px 14px', marginBottom:20, fontSize:'0.82rem', color:'var(--text-muted)', lineHeight:1.5 }}>
-            ℹ️ After signing up, an admin must activate your account before you can log in.
+            ℹ️ You can sign in right away. Module access may still be assigned by your manager or admin.
           </div>
 
           <button className="btn btn-primary" style={{ width:'100%', padding:'12px', fontSize:'1rem', marginBottom:16 }} disabled={loading}>
