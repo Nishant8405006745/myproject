@@ -28,7 +28,14 @@ export default function Login() {
       toast.success(`Welcome back, ${user.name.split(' ')[0]}!`);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Invalid credentials. Please try again.');
+      const d = err.response?.data?.detail;
+      const net = err.code === 'ERR_NETWORK' || err.message === 'Network Error';
+      setError(
+        d ||
+          (net ? 'Cannot reach the server. Wait for Render to wake up (~1 min) and try again.' : null) ||
+          err.message ||
+          'Invalid credentials. Please try again.',
+      );
     } finally { setLoading(false); }
   };
 

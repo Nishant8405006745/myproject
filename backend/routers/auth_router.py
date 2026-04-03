@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from database import get_db
 import models, schemas
@@ -39,7 +40,8 @@ def _build_user_response(user: models.User, modules: list, manager_name: str = N
 @router.post("/signup")
 def signup(data: SignupRequest, db: Session = Depends(get_db)):
     """Public self-registration — creates an active Employee account (module access still via permissions)."""
-    existing = db.query(models.User).filter(models.User.email == data.email).first()
+    em = _norm_email(data.email)
+    existing = db.query(models.User).filter(func.lower(models.User.email) == em).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered.")
     if len(data.password) < 6:
@@ -47,7 +49,7 @@ def signup(data: SignupRequest, db: Session = Depends(get_db)):
 
     new_user = models.User(
         name          = data.name,
-        email         = data.email,
+        email         = em,
         password_hash = get_password_hash(data.password),
         role          = "employee",
         department    = data.department or "General",
@@ -64,7 +66,7 @@ def signup(data: SignupRequest, db: Session = Depends(get_db)):
         n = models.Notification(
             user_id  = admin.id,
             title    = "New User Signup",
-            message  = f"{data.name} ({data.email}) just signed up.",
+            message  = f"{data.name} ({em}) just signed up.",
             type     = "info",
             link     = "/admin/users"
         )
@@ -74,9 +76,15 @@ def signup(data: SignupRequest, db: Session = Depends(get_db)):
     return {"message": "Account created successfully! You can sign in now."}
 
 
+def _norm_email(email: str) -> str:
+    return (email or "").strip().lower()
+
+
 @router.post("/login", response_model=schemas.TokenResponse)
 def login(data: schemas.LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == data.email).first()
+    # Postgres string compare is case-sensitive; users often type mixed-case emails
+    em = _norm_email(data.email)
+    user = db.query(models.User).filter(func.lower(models.User.email) == em).first()
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     if not user.is_active and user.role != "admin":

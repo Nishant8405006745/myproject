@@ -1,9 +1,13 @@
 import os
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 import logging
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 import models
 from database import engine, SessionLocal
 from routers import auth_router, users_router, permissions_router, accounting_router, profile_router, notifications_router, messages_router
@@ -25,7 +29,7 @@ def _auto_seed_admin_if_enabled() -> None:
         return
     db = SessionLocal()
     try:
-        if db.query(models.User).filter(models.User.email == "admin@acme.com").first():
+        if db.query(models.User).filter(func.lower(models.User.email) == "admin@acme.com").first():
             return
         from auth import get_password_hash
 
@@ -43,6 +47,9 @@ def _auto_seed_admin_if_enabled() -> None:
             "AUTO_SEED_ADMIN: created admin@acme.com (password Admin@123). "
             "Unset AUTO_SEED_ADMIN, change the password, and run seed.py for full demo data."
         )
+    except IntegrityError:
+        db.rollback()
+        _log.info("AUTO_SEED_ADMIN: admin already exists (race or duplicate)")
     except Exception:
         db.rollback()
         _log.exception("AUTO_SEED_ADMIN failed")
@@ -50,12 +57,17 @@ def _auto_seed_admin_if_enabled() -> None:
         db.close()
 
 
-_auto_seed_admin_if_enabled()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    _auto_seed_admin_if_enabled()
+    yield
+
 
 app = FastAPI(
     title="HYGLOW Accounting API",
     description="Role-based accounting management system",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 # CORS — local dev defaults; set CORS_ORIGINS="https://app.example.com,https://www.example.com" in production
@@ -75,6 +87,7 @@ allow_origins = [o.strip() for o in _cors_env.split(",") if o.strip()] if _cors_
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
+    allow_origin_regex=r"https://.*\.onrender\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -88,6 +101,21 @@ app.include_router(accounting_router.router)
 app.include_router(profile_router.router)
 app.include_router(notifications_router.router)
 app.include_router(messages_router.router)
+
+
+@app.get("/api/health")
+def api_health():
+    """Public: DB reachable and user count (debug deploy / login issues)."""
+    try:
+        db = SessionLocal()
+        try:
+            n = db.query(models.User).count()
+            return {"ok": True, "database": "connected", "user_count": n}
+        finally:
+            db.close()
+    except Exception as exc:
+        return {"ok": False, "database": "error", "error": type(exc).__name__}
+
 
 # Production: serve Vite build from ./static (same origin as /api — one URL on the internet)
 if HAS_FRONTEND:
