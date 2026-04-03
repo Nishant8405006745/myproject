@@ -3,8 +3,8 @@
 #
 # New → Blueprint → connect repo. App: https://<service-name>.onrender.com
 #
-# Login: AUTO_SEED_ADMIN creates admin@acme.com / Admin@123 on first boot if DB is empty.
-# After login, unset AUTO_SEED_ADMIN in the dashboard, change password, and optionally run: python seed.py
+# Login: empty DB auto-creates admin@acme.com / Admin@123 on startup (no env vars required).
+# Set DISABLE_AUTO_ADMIN=1 to turn that off. Run python seed.py in Shell for full demo data.
 #
 # Free Postgres expires after ~30 days unless upgraded — see Render pricing.
 
@@ -36,5 +36,3 @@ services:
           property: connectionString
       - key: SECRET_KEY
         generateValue: true
-      - key: AUTO_SEED_ADMIN
-        value: "1"

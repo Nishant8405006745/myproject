@@ -23,13 +23,21 @@ HAS_FRONTEND = os.path.isdir(STATIC_DIR) and os.path.isfile(os.path.join(STATIC_
 models.Base.metadata.create_all(bind=engine)
 
 
-def _auto_seed_admin_if_enabled() -> None:
-    """If AUTO_SEED_ADMIN=1|true|yes and no admin@acme.com exists, create demo admin (for first deploy on Render)."""
-    if os.getenv("AUTO_SEED_ADMIN", "").lower() not in ("1", "true", "yes"):
+def _ensure_bootstrap_admin() -> None:
+    """Create admin@acme.com when the DB has zero users (first deploy on Render, no env vars needed).
+
+    Set DISABLE_AUTO_ADMIN=1 to skip. Set AUTO_SEED_ADMIN=1 to also create admin when other users exist
+    but admin@acme.com is missing (rare).
+    """
+    if os.getenv("DISABLE_AUTO_ADMIN", "").lower() in ("1", "true", "yes"):
         return
     db = SessionLocal()
     try:
         if db.query(models.User).filter(func.lower(models.User.email) == "admin@acme.com").first():
+            return
+        n_users = db.query(models.User).count()
+        force = os.getenv("AUTO_SEED_ADMIN", "").lower() in ("1", "true", "yes")
+        if n_users > 0 and not force:
             return
         from auth import get_password_hash
 
@@ -44,22 +52,22 @@ def _auto_seed_admin_if_enabled() -> None:
         )
         db.commit()
         _log.warning(
-            "AUTO_SEED_ADMIN: created admin@acme.com (password Admin@123). "
-            "Unset AUTO_SEED_ADMIN, change the password, and run seed.py for full demo data."
+            "Bootstrap admin created: admin@acme.com / Admin@123 — change password after login. "
+            "Run python seed.py for demo data. Set DISABLE_AUTO_ADMIN=1 to disable auto-create."
         )
     except IntegrityError:
         db.rollback()
-        _log.info("AUTO_SEED_ADMIN: admin already exists (race or duplicate)")
+        _log.info("Bootstrap admin: already exists (concurrent create)")
     except Exception:
         db.rollback()
-        _log.exception("AUTO_SEED_ADMIN failed")
+        _log.exception("Bootstrap admin failed")
     finally:
         db.close()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    _auto_seed_admin_if_enabled()
+    _ensure_bootstrap_admin()
     yield
 
 

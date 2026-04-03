@@ -120,10 +120,10 @@ export default function Login() {
               border: '1px solid rgba(59,130,246,0.2)',
             }}
           >
-            <strong style={{ color: 'var(--text-primary)' }}>Hosted on Render?</strong> Use{' '}
-            <strong>admin@acme.com</strong> / <strong>Admin@123</strong> after the database is seeded.
-            Your service can set <code style={{ fontSize: '0.7rem' }}>AUTO_SEED_ADMIN=1</code> (see{' '}
-            <code style={{ fontSize: '0.7rem' }}>render.yaml</code>) or run <code style={{ fontSize: '0.7rem' }}>python seed.py</code> in the Render Shell.
+            <strong style={{ color: 'var(--text-primary)' }}>Hosted on Render?</strong> First deploy creates{' '}
+            <strong>admin@acme.com</strong> / <strong>Admin@123</strong> automatically when the database is empty.
+            Wait for the service to finish starting, then sign in. For sample invoices/employees run{' '}
+            <code style={{ fontSize: '0.7rem' }}>python seed.py</code> in the Render Shell.
           </div>
         )}
 
