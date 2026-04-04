@@ -80,7 +80,7 @@ app = FastAPI(
 
 # CORS — local dev defaults; set CORS_ORIGINS="https://app.example.com,https://www.example.com" in production
 _default_cors = [
-    "https://myproject-vzih.vercel.app"
+    "https://myproject-vzih.vercel.app",
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:5175",
