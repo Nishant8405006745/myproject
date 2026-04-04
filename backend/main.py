@@ -80,6 +80,7 @@ app = FastAPI(
 
 # CORS — local dev defaults; set CORS_ORIGINS="https://app.example.com,https://www.example.com" in production
 _default_cors = [
+    "https://myproject-vzih.vercel.app"
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:5175",
@@ -95,7 +96,7 @@ allow_origins = [o.strip() for o in _cors_env.split(",") if o.strip()] if _cors_
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
-    allow_origin_regex=r"https://.*\.onrender\.com",
+    allow_origin_regex=r"https://myproject-vzih.vercel.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
