@@ -93,10 +93,12 @@ _default_cors = [
 _cors_env = os.getenv("CORS_ORIGINS", "").strip()
 allow_origins = [o.strip() for o in _cors_env.split(",") if o.strip()] if _cors_env else _default_cors
 
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allow_origins,
-    allow_origin_regex=r"https://myproject-vzih.vercel.app",
+    allow_origins=[
+        "https://myproject-vzih.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
