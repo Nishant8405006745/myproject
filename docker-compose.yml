@@ -1,10 +1,8 @@
 # HYGLOW — run: docker compose up --build -d
 # First-time DB: docker compose exec backend python seed.py
 #
-# Production: set SECRET_KEY and CORS_ORIGINS in a .env file next to this compose file.
-# Example .env:
-#   SECRET_KEY=use-openssl-rand-hex-32
-#   CORS_ORIGINS=https://your-domain.com,https://www.your-domain.com
+# Use Supabase: set DATABASE_URL in .env to your Supabase Postgres URI (see env.example).
+# If unset, backend uses SQLite on the hyglow_sqlite volume.
 
 services:
   backend:
@@ -14,7 +12,7 @@ services:
     volumes:
       - hyglow_sqlite:/data
     environment:
-      DATABASE_URL: sqlite:////data/accounting.db
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////data/accounting.db}
       SECRET_KEY: ${SECRET_KEY:-change-this-secret-in-production}
       CORS_ORIGINS: ${CORS_ORIGINS:-}
     expose:

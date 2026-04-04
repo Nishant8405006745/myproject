@@ -1,17 +1,11 @@
-# Render Blueprint — one public URL (UI + API on the same service)
+# Render Blueprint — one Docker service + external Postgres (Supabase recommended)
 # https://render.com/docs/infrastructure-as-code
 #
-# New → Blueprint → connect repo. App: https://<service-name>.onrender.com
+# 1) Create a project at https://supabase.com → Settings → Database
+# 2) Copy the URI (use "Session mode" or Direct "URI" for SQLAlchemy; see env.example)
+# 3) New → Blueprint → connect repo. When prompted, paste DATABASE_URL (keep ?sslmode=require if present)
 #
-# Login: empty DB auto-creates admin@acme.com / Admin@123 on startup (no env vars required).
-# Set DISABLE_AUTO_ADMIN=1 to turn that off. Run python seed.py in Shell for full demo data.
-#
-# Free Postgres expires after ~30 days unless upgraded — see Render pricing.
-
-databases:
-  - name: hyglow-db
-    plan: free
-    databaseName: hyglow
+# Login: empty DB auto-creates admin@acme.com / Admin@123. Shell → python seed.py for demo data.
 
 services:
   - type: web
@@ -31,8 +25,6 @@ services:
         - render.yaml
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: hyglow-db
-          property: connectionString
+        sync: false
       - key: SECRET_KEY
         generateValue: true
